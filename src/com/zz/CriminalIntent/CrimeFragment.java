@@ -1,8 +1,10 @@
 package com.zz.CriminalIntent;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -12,6 +14,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+
 import java.util.*;
 /**
  * Created by zz on 2015/6/10.
@@ -21,7 +24,9 @@ public class CrimeFragment  extends Fragment {
     private EditText mEditText;
     private Button mDateButton;
     private CheckBox mSolvedChecBox;
+    private static final String DIALOG_DATE = "date";
     public static final String EXTRA_CRIME_ID = "com.zz.CriminalItent.crime_id";
+    public static final int REQUEST_DATE = 0;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,10 +53,16 @@ public class CrimeFragment  extends Fragment {
             }
         });
         mDateButton = (Button)v.findViewById(R.id.crime_date);
-        mDateButton.setText(mCrime.getDate().toString());
-
-        mDateButton.setEnabled(false);
-
+        updateDate();
+        mDateButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                FragmentManager fm = getActivity()
+                        .getSupportFragmentManager();
+                DatePickeFragment datePickeFragment = DatePickeFragment.newInstance(mCrime.getDate());
+                datePickeFragment.setTargetFragment(CrimeFragment.this,REQUEST_DATE);
+                datePickeFragment.show(fm, DIALOG_DATE);
+            }
+        });
         mSolvedChecBox = (CheckBox)v.findViewById(R.id.crime_solved);
         mSolvedChecBox.setChecked(mCrime.isSolved());
         mSolvedChecBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -73,4 +84,16 @@ public class CrimeFragment  extends Fragment {
         getActivity().setResult(Activity.RESULT_OK,null);
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode!=Activity.RESULT_OK)return;
+        if (requestCode == REQUEST_DATE){
+            Date date = (Date)data.getSerializableExtra(DatePickeFragment.EXTRA_DATE);
+            mCrime.setDate(date);
+            updateDate();
+        }
+    }
+    public void updateDate(){
+        mDateButton.setText(mCrime.getDate().toString());
+    }
 }
